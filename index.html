@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<head>
+  <style>
+    body {
+      background-color: lightgray;
+    }
+    canvas {
+      margin: 1em;
+      width: 90px;
+      height: 90px;
+    }
+  </style>
+  <script>
+    let canvas;
+    let ctx;
+    const size = 30;
+
+    function download() {
+      var link = document.createElement('a');
+      link.download = 'rounded.9.png';
+      link.href = document.getElementById('preview').toDataURL()
+      link.click();
+    }
+
+    function fillRectImageData(ctx, colorArray, x, y, w, h) {
+      if (w == 0 || h == 0) {
+        return;
+      }
+
+      if (w < 0) {
+        x += w;
+        w = -w;
+      }
+      if (h < 0) {
+        y += h;
+        h = -h;
+      }
+
+      let imgData = ctx.createImageData(w, h);
+      for (let i = 0; i < w * h; i++) {
+        imgData.data[i * 4] = colorArray[0];
+        imgData.data[i * 4 + 1] = colorArray[1];
+        imgData.data[i * 4 + 2] = colorArray[2];
+        imgData.data[i * 4 + 3] = colorArray[3];
+      }
+      ctx.putImageData(imgData, x, y);
+    }
+
+    function updateRect() {
+      var radius = parseInt(document.getElementById("borderRadius").value);
+      var width = parseInt(document.getElementById("borderWidth").value);
+      var fill = document.getElementById("fill").checked;
+
+      if (!isNaN(radius)) {
+        var start = radius + width;
+        console.log(radius, width, start);
+
+        if (start >= size/2 - 2) {
+          start = size/2 - 2
+        }
+
+        ctx.reset();
+        ctx.imageSmoothingEnabled = false;
+        ctx.scale(1, 1);
+
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = width;
+        ctx.beginPath();
+        ctx.moveTo(1, 1);
+        ctx.roundRect(1 + width, 1 + width, (size - 2) - (width*2), (size - 2) - (width*2), radius);
+        if (fill) {
+          ctx.fillStyle = "white";
+          ctx.fill();
+        }
+        ctx.stroke();
+
+        fillRectImageData(ctx, [0, 0, 0, 255], 1 + start, 0, (size - 2)-start-start, 1)
+        fillRectImageData(ctx, [0, 0, 0, 255], 0, 1 + start, 1, (size - 2)-start-start)
+      }
+    }
+
+    function onBorderChange(event) {
+      updateRect()
+    }
+
+    function onFillChange(event) {
+      updateRect()
+    }
+
+    window.addEventListener("load", (event) => {
+      canvas = document.getElementById("preview");
+      ctx = canvas.getContext("2d");
+
+      document.getElementById("borderRadius").addEventListener("input", onBorderChange);
+      document.getElementById("borderWidth").addEventListener("input", onBorderChange);
+      document.getElementById("fill").addEventListener("input", onFillChange);
+      document.getElementById("download").addEventListener("click", download)
+
+      updateRect();
+    });
+  </script>
+</head>
+<body>
+  <div style="break-after: always;"><div style="display: inline;">Border radius:</div><div style="display: inline"><input id="borderRadius" type="number" value="8"></div></div>
+  <div style="break-after: always;"><div style="display: inline;">Border width:</div><div style="display: inline"><input id="borderWidth" type="number" value="2"></div></div>
+  <div style="break-after: always;"><div style="display: inline;">Fill:</div><div style="display: inline"><input id="fill" type="checkbox"></div></div>
+  <canvas id="preview" width="30" height="30"></canvas>
+  <input id="download" type="button" value="Download" />
+</body>
