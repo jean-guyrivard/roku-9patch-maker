@@ -49,11 +49,11 @@
     function updateRect() {
       var radius = parseInt(document.getElementById("borderRadius").value);
       var width = parseInt(document.getElementById("borderWidth").value);
-      var fill = document.getElementById("fill").checked;
+      var fill = document.querySelector('input[name="fill"]:checked').value;
 
       if (!isNaN(radius)) {
         var start = radius + width;
-        console.log(radius, width, start);
+        console.log(radius, width, start, fill);
 
         if (start >= size/2 - 2) {
           start = size/2 - 2
@@ -67,12 +67,25 @@
         ctx.lineWidth = width;
         ctx.beginPath();
         ctx.moveTo(1, 1);
-        ctx.roundRect(1 + width, 1 + width, (size - 2) - (width*2), (size - 2) - (width*2), radius);
-        if (fill) {
+        if (fill != "invert") {
+          ctx.roundRect(1 + width, 1 + width, (size - 2) - (width*2), (size - 2) - (width*2), radius);
+        } else {
+          ctx.roundRect(1 + width*2, 1 + width*2, (size - 2) - (width*4), (size - 2) - (width*4), radius);
+        }
+        if (fill == "fill" || fill == "invert") {
           ctx.fillStyle = "white";
           ctx.fill();
         }
         ctx.stroke();
+
+        if (fill == "invert") {
+          ctx.strokeStyle = "rgba(255, 255, 255, 0)";
+          ctx.lineWidth = width;
+          ctx.beginPath();
+          ctx.moveTo(1, 1);
+          ctx.roundRect(1 + width, 1 + width, (size - 2) - (width*2), (size - 2) - (width*2), radius);
+          ctx.stroke();
+        }
 
         fillRectImageData(ctx, [0, 0, 0, 255], 1 + start, 0, (size - 2)-start-start, 1)
         fillRectImageData(ctx, [0, 0, 0, 255], 0, 1 + start, 1, (size - 2)-start-start)
@@ -93,7 +106,10 @@
 
       document.getElementById("borderRadius").addEventListener("input", onBorderChange);
       document.getElementById("borderWidth").addEventListener("input", onBorderChange);
-      document.getElementById("fill").addEventListener("input", onFillChange);
+      const fillRadios = document.getElementsByName("fill");
+      for(var i = 0; i < fillRadios.length; i++) {
+        fillRadios[i].addEventListener("input", onFillChange);
+      }
       document.getElementById("download").addEventListener("click", download)
 
       updateRect();
@@ -103,7 +119,14 @@
 <body>
   <div style="break-after: always;"><div style="display: inline;">Border radius:</div><div style="display: inline"><input id="borderRadius" type="number" value="8"></div></div>
   <div style="break-after: always;"><div style="display: inline;">Border width:</div><div style="display: inline"><input id="borderWidth" type="number" value="2"></div></div>
-  <div style="break-after: always;"><div style="display: inline;">Fill:</div><div style="display: inline"><input id="fill" type="checkbox"></div></div>
+  <div style="break-after: always;">
+    <div style="display: inline;">Fill:</div>
+    <div style="display: inline">
+      <input id="fill" name="fill" type="radio" value="none" checked> No Fill 
+      <input id="fill" name="fill" type="radio" value="fill"> Fill 
+      <input id="fill" name="fill" type="radio" value="invert"> Inverted Fill
+    </div>
+  </div>
   <canvas id="preview" width="30" height="30"></canvas>
   <input id="download" type="button" value="Download" />
 </body>
